@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Todo List</title>
+        <meta charset="utf-8" />
+    </head>
+
+    <body>
+        <h2>Todo app w/ XHR + Promise</h2>
+        <div>
+            item: <input type="text" id=upload_item>
+            <button onclick=uploadDoc()>登録</button><br><br>
+        </div>
+        <div>
+            <p></p>
+            <p id=output_text></p>
+        </div>
+        
+        <script>
+            //読み込み時に実行
+            window.onload = loadDoc();
+
+            //DBに新規登録する関数
+            function uploadDoc() {
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://127.0.0.1:8000/api/items/", true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+
+                //入力された文字列の取得してJSON形式にする
+                const upload_item = document.getElementById("upload_item").value;
+                const body_text = JSON.stringify({
+                    item: document.getElementById("upload_item").value,
+                });
+
+                //送る・入力文字列を消す・待機してからデータを取ってくる
+                xhr.send(body_text);
+                document.getElementById("upload_item").value = "";
+                window.setTimeout(loadDoc, 100);
+            }
+
+            //DBにDELETEリクエストする関数
+            function deleteDoc(id) {
+                let xhr = new XMLHttpRequest();
+                xhr.open("DELETE", `http://127.0.0.1:8000/api/items/${id}`, true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+                xhr.send();
+                window.setTimeout(loadDoc, 100);
+            }
+            
+            //DBからデータを取ってきて表示する関数　これが呼ばれたらPromiseを作ってthen/catchする
+            function loadDoc() {
+                //表示する中身の変数
+                let content;
+
+                //Promiseオブジェクトを生成する関数
+                function listItems (){
+                    return new Promise((resolve, reject) => {
+                        let xhr = new XMLHttpRequest();
+                        xhr.open("GET", "http://127.0.0.1:8000/api/items/", true);
+                        xhr.responseType = 'json';
+                        xhr.onload = () => {
+                            if (200 <= xhr.status && xhr.status < 300) {
+                                resolve(xhr.response);
+                            } else {
+                                reject(new Error(xhr.statusText));
+                            }
+                        };
+                        xhr.onerror = () => {
+                            reject(new Error(xhr.statusText));
+                        };
+                        xhr.send();
+                    });
+                }
+
+                //Promiseオブジェクトのthen
+                listItems().then(function onFulfilled(value){
+                    content = value.map((item, index) => {
+                        let date_str = item.created_at;
+                        //日付を成形
+                        let date_show = dateEdit(date_str);
+                        //HTMLタグを付けてreturnする
+                        return (`
+                            <li>
+                                ${item.item} ${date_show}
+                                <button id=del${item.id} onclick=deleteDoc(${item.id})>削除</button>
+                            </li>
+                        `);
+                    });
+                    //表示内容を代入
+                    document.getElementById("output_text").innerHTML = content;
+                //catch
+                }).catch(function onRejected(error){
+                    //表示内容を代入
+                    document.getElementById("output_text").innerHTML = error;
+                });
+            }
+
+            //DBから帰ってきた日付を成形する関数
+            function dateEdit(date_str) {
+                let date_month = date_str.slice(5,7);
+                let date_day = date_str.slice(8,10);
+                let date_hour = date_str.slice(11,13);
+                let date_min = date_str.slice(14,16);
+                return date_month + "/" + date_day + " " + date_hour + ":" + date_min;
+            }
+        </script>    
+    
+
+
+
+
+    </body>
+
+</html>
