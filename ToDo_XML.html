@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Todo List</title>
+        <meta charset="utf-8" />
+    </head>
+
+    <body>
+        <h2>Todo app w/ XMLHttpRequest</h2>
+        <div>
+            item: <input type="text" id=upload_item>
+            <button onclick=uploadDoc()>登録</button><br><br>
+        </div>
+        <div>
+            <p></p>
+            <p id=output_text></p>
+        </div>
+        
+        <script>
+            //読み込み時に実行
+            window.onload = loadDoc();
+
+            //DBに新規登録する関数
+            function uploadDoc() {
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://127.0.0.1:8000/api/items/", true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+
+                //入力された文字列の取得してJSON形式にする
+                const upload_item = document.getElementById("upload_item").value;
+                const body_text = JSON.stringify({
+                    item: document.getElementById("upload_item").value,
+                });
+
+                //送る・入力文字列を消す・待機してからデータを取ってくる
+                xhr.send(body_text);
+                document.getElementById("upload_item").value = "";
+                window.setTimeout(loadDoc, 100);
+            }
+
+            //DBにDELETEリクエストする関数
+            function deleteDoc(id) {
+                let xhr = new XMLHttpRequest();
+                xhr.open("DELETE", `http://127.0.0.1:8000/api/items/${id}`, true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+                xhr.send();
+                window.setTimeout(loadDoc, 100);
+            }
+            
+            //DBからデータを取ってきて表示する関数
+            function loadDoc() {
+                let xhr = new XMLHttpRequest();
+
+                //XMLHttpReqestオブジェクトに変化があった時に呼ばれる
+                xhr.onreadystatechange = function() {
+                    const object = xhr.response;
+                    //配列オブジェクトを回す
+                    let content = object.map( (item, index) => {
+                        let date_str = item.created_at;
+                        //日付を成形
+                        let date_show = dateEdit(date_str);
+                        return (`
+                            <li>
+                                ${item.item} ${date_show}
+                                <button id=del${index} onclick=deleteDoc(${item.id})>削除</button>
+                            </li>
+                        `);
+                    });
+                    //表示内容を更新する
+                    document.getElementById("output_text").innerHTML = content;
+                };
+
+                xhr.open("GET", "http://127.0.0.1:8000/api/items/", true);
+                xhr.responseType = 'json';
+                xhr.send();
+            }
+
+            //DBから帰ってきた日付の成形
+            function dateEdit(date_str) {
+                let date_month = date_str.slice(5,7);
+                let date_day = date_str.slice(8,10);
+                let date_hour = date_str.slice(11,13);
+                let date_min = date_str.slice(14,16);
+                return date_month + "/" + date_day + " " + date_hour + ":" + date_min;
+            }
+        </script>    
+    
+
+
+
+
+    </body>
+
+</html>
