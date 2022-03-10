@@ -6,7 +6,7 @@
     </head>
 
     <body>
-        <h2>Todo app w/ XHR + Promise</h2>
+        <h2>Todo app w/ XHR + Promise + async/await</h2>
         <div>
             item: <input type="text" id=upload_item>
             <button onclick=uploadDoc()>登録</button><br><br>
@@ -47,7 +47,8 @@
                 window.setTimeout(loadDoc, 100);
             }
             
-            //DBからデータを取ってきて表示する関数　これが呼ばれたらPromiseを作ってthen/catchする
+            //DBからデータを取ってきて表示する関数
+            //これが呼ばれたらPromiseを作ってthen/catchする
             function loadDoc() {
                 //表示する中身の変数
                 let content;
@@ -72,8 +73,10 @@
                     });
                 }
 
-                //Promiseオブジェクトのthen
-                listItems().then(function onFulfilled(items){
+                //async/awaitで関数を作る
+                async function makeList() {
+                    let items = await listItems();
+
                     content = items.map((item, index) => {
                         let date_str = item.created_at;
                         //日付を成形
@@ -88,11 +91,10 @@
                     });
                     //表示内容を代入
                     document.getElementById("output_text").innerHTML = content;
-                //catch
-                }).catch(function onRejected(error){
-                    //表示内容を代入
-                    document.getElementById("output_text").innerHTML = error;
-                });
+                }
+
+                //ここで実行
+                makeList();
             }
 
             //DBから帰ってきた日付を成形する関数
