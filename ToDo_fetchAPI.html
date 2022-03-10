@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Todo List</title>
+        <meta charset="utf-8" />
+    </head>
+
+    <body>
+        <h2>Todo app w/ fetchAPI</h2>
+        <div>
+            item: <input type="text" id=upload_item>
+            <button onclick=uploadDoc()>登録</button><br><br>
+        </div>
+        <div>
+            <p></p>
+            <p id=output_text></p>
+        </div>
+        
+        <script>
+            //URLの設定
+            let url = new URL("http://127.0.0.1:8000/api/items/");
+            url = url.toString();
+
+            //読み込み時に実行
+            window.onload = loadDoc();
+
+            //DBからデータを取ってきて表示する関数
+            //fetchAPIで書き直した
+            function loadDoc() {
+                //fetchAPIで書き直した
+                async function fetchData(){
+                    let content;
+                    const fetchResponse = await fetch(url)
+                        .then(response => response.json())
+                        .then(data => {content = data})
+                        .catch(err => {content = err});
+                    return(content);
+                }
+
+                //fetchDataを使ってHTMLタグを生成して代入する関数
+                async function makeList() {
+
+                    //fetchするところ
+                    let items = await fetchData();
+
+                    //fetchしたデータを回す
+                    content = items.map((item, index) => {
+                        //日付の取得
+                        let date_str = item.created_at;
+                        //日付を成形
+                        let date_show = dateEdit(date_str);
+                        //HTMLタグを付けてreturnする
+                        return (`
+                            <li>
+                                ${item.item} ${date_show}
+                                <button id=del${item.id} onclick=deleteDoc(${item.id})>削除</button>
+                            </li>
+                        `);
+                    });
+
+                    //表示内容を代入
+                    document.getElementById("output_text").innerHTML = content;
+                }
+
+                //実行
+                makeList();
+            }
+
+            //DBに登録する関数
+            //fetchAPIで書き直した
+            function uploadDoc() {
+
+                //POSTとする内容のJSON化
+                const body_text = JSON.stringify({
+                    item: document.getElementById("upload_item").value,
+                });
+
+                //POSTする関数
+                async function postData(){
+                    const postingData = await fetch(url, {
+                        method: "POST",
+                        headers: {"Content-Type": "application/json",},
+                        body: body_text,                        
+                    })
+                    .then(window.setTimeout(loadDoc, 100))
+                    .then(document.getElementById("upload_item").value = "")
+                    .catch(error => alart(error))
+                }
+
+                //実行
+                postData()
+            }
+
+            //DBにDELETEリクエストする関数
+            //fetchAPIで書き直した
+            function deleteDoc(id) {
+
+                //DELETE用URLの生成
+                let urlDel = url + id;
+
+                //DELETEする関数
+                async function deleteData(){
+                    const deleteData = await fetch(urlDel, {
+                        method: "DELETE",
+                        headers: {"Content-Type": "application/json",},
+                    })
+                    .then(window.setTimeout(loadDoc, 100))
+                    .catch(error => alart(error))
+                }
+
+                //実行
+                deleteData()
+            }
+
+            //DBから帰ってきた日付を成形する関数
+            function dateEdit(date_str) {
+                let date_month = date_str.slice(5,7);
+                let date_day = date_str.slice(8,10);
+                let date_hour = date_str.slice(11,13);
+                let date_min = date_str.slice(14,16);
+                return date_month + "/" + date_day + " " + date_hour + ":" + date_min;
+            }
+        </script>    
+    </body>
+</html>
