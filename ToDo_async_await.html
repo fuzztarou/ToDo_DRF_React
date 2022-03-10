@@ -20,33 +20,6 @@
             //読み込み時に実行
             window.onload = loadDoc();
 
-            //DBに新規登録する関数
-            function uploadDoc() {
-                let xhr = new XMLHttpRequest();
-                xhr.open("POST", "http://127.0.0.1:8000/api/items/", true);
-                xhr.setRequestHeader( "Content-Type", "application/json");
-
-                //入力された文字列の取得してJSON形式にする
-                const upload_item = document.getElementById("upload_item").value;
-                const body_text = JSON.stringify({
-                    item: document.getElementById("upload_item").value,
-                });
-
-                //送る・入力文字列を消す・待機してからデータを取ってくる
-                xhr.send(body_text);
-                document.getElementById("upload_item").value = "";
-                window.setTimeout(loadDoc, 100);
-            }
-
-            //DBにDELETEリクエストする関数
-            function deleteDoc(id) {
-                let xhr = new XMLHttpRequest();
-                xhr.open("DELETE", `http://127.0.0.1:8000/api/items/${id}`, true);
-                xhr.setRequestHeader( "Content-Type", "application/json");
-                xhr.send();
-                window.setTimeout(loadDoc, 100);
-            }
-            
             //DBからデータを取ってきて表示する関数
             //これが呼ばれたらPromiseを作ってthen/catchする
             function loadDoc() {
@@ -97,6 +70,34 @@
                 makeList();
             }
 
+
+            //DBに新規登録する関数
+            function uploadDoc() {
+                let xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://127.0.0.1:8000/api/items/", true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+
+                //入力された文字列の取得してJSON形式にする
+                const upload_item = document.getElementById("upload_item").value;
+                const body_text = JSON.stringify({
+                    item: document.getElementById("upload_item").value,
+                });
+
+                //送る・入力文字列を消す・待機してからデータを取ってくる
+                xhr.send(body_text);
+                document.getElementById("upload_item").value = "";
+                window.setTimeout(loadDoc, 100);
+            }
+
+            //DBにDELETEリクエストする関数
+            function deleteDoc(id) {
+                let xhr = new XMLHttpRequest();
+                xhr.open("DELETE", `http://127.0.0.1:8000/api/items/${id}`, true);
+                xhr.setRequestHeader( "Content-Type", "application/json");
+                xhr.send();
+                window.setTimeout(loadDoc, 100);
+            }
+            
             //DBから帰ってきた日付を成形する関数
             function dateEdit(date_str) {
                 let date_month = date_str.slice(5,7);
