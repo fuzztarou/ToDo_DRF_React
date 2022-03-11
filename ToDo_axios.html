@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>JS Todo List</title>
+        <meta charset="utf-8" />
+        <script src="/axios.min.js"></script>
+    </head>
+
+    <body>
+        <h2>Todo app w/ axios</h2>
+        <div>
+            item: <input type="text" id=upload_item>
+            <button onclick=uploadDoc()>登録</button><br><br>
+        </div>
+        <div>
+            <p></p>
+            <p id=output_text></p>
+        </div>
+        
+        <script>
+
+            //const axios = require('axios').default;
+            //import axios from 'axios';
+            console.log("axios定義のところ");
+
+            //URLの設定
+            let url = new URL("http://127.0.0.1:8000/api/items/");
+            url = url.toString();
+
+            //読み込み時に実行
+            window.onload = loadDoc();
+
+            //DBからデータを取ってきて表示する関数
+            //axiosで書き直した
+            function loadDoc() {
+                //axiosで書き直した
+                async function fetchData(){
+                    let content;
+                    const fetchResponse = await axios.get(url)
+                        .then(response => response.data)
+                        .then(data => content = data)
+                        .catch(err => content = err)
+                    return(content);
+                }
+
+                //fetchDataを使ってHTMLタグを生成して代入する関数
+                async function makeList() {
+
+                    //fetchするところ
+                    let items = await fetchData();
+                    console.log("items:" + items)
+
+                    //fetchしたデータを回す
+                    content = items.map((item, index) => {
+                        //日付の取得
+                        let date_str = item.created_at;
+                        //日付を成形
+                        let date_show = dateEdit(date_str);
+                        //HTMLタグを付けてreturnする
+                        return (`
+                            <li>
+                                ${item.item} ${date_show}
+                                <button id=del${item.id} onclick=deleteDoc(${item.id})>削除</button>
+                            </li>
+                        `);
+                    });
+
+                    //表示内容を代入
+                    document.getElementById("output_text").innerHTML = content;
+                }
+
+                //実行
+                makeList();
+            }
+
+            //DBに登録する関数
+            //axiosで書き直した
+            function uploadDoc() {
+
+                //POSTする内容のJSON化
+                const body_item = document.getElementById("upload_item").value;
+
+                //POSTする関数
+                async function postData(){
+                    const postingData = await axios.post(url, {
+                        item: body_item
+                    })
+                    .then(window.setTimeout(loadDoc, 100))
+                    .then(document.getElementById("upload_item").value = "")
+                    .catch(error => alert(error));
+                }
+
+                //実行
+                postData()
+            }
+
+            //DBにDELETEリクエストする関数
+            //axiosで書き直した
+            function deleteDoc(id) {
+
+                //DELETE用URLの生成
+                let urlDel = url + id;
+
+                //DELETEする関数
+                async function deleteData(){
+                    const deleteData = await axios.delete(urlDel)
+                    .then(window.setTimeout(loadDoc, 100))
+                    .catch(error => alart(error))
+                }
+
+                //実行
+                deleteData()
+            }
+
+            //DBから帰ってきた日付を成形する関数
+            function dateEdit(date_str) {
+                let date_month = date_str.slice(5,7);
+                let date_day = date_str.slice(8,10);
+                let date_hour = date_str.slice(11,13);
+                let date_min = date_str.slice(14,16);
+                return date_month + "/" + date_day + " " + date_hour + ":" + date_min;
+            }
+        </script>    
+    </body>
+</html>

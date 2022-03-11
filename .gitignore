@@ -1,2 +1,5 @@
 todoenv/
 todo_project/db.sqlite3
+axios.map
+axios.min.js
+axios.min.map
